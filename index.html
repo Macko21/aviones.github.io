@@ -2,51 +2,61 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Space War: Advanced Warfare</title>
+    <title>Space War: Plasma Edition</title>
     <style>
-        :root { --neon: #00f2ff; --gold: #ffcc00; --ammo: #ff00ff; }
-        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        #game-container { position: relative; border: 2px solid #333; box-shadow: 0 0 50px rgba(0, 242, 255, 0.15); background: #02020a; width: 800px; height: 600px; }
+        :root { --neon: #00f2ff; --gold: #ffcc00; --shield: #00ff88; --danger: #ff4444; --plasma: #33ff00; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Orbitron', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #game-container { position: relative; border: 2px solid #222; background: #000; width: 800px; height: 600px; }
         canvas { display: block; }
-        .ui-panel { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; text-shadow: 0 0 10px #000; }
-        #menu-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
-        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
-        .upgrade-card { background: #111; padding: 15px; border: 1px solid #444; border-radius: 8px; width: 160px; text-align: center; }
-        button { padding: 10px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; margin-top: 10px; }
-        button:disabled { background: #333; color: #777; }
-        .timer-bar { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 200px; height: 5px; background: rgba(255,255,255,0.1); display: none; }
-        #double-fill { height: 100%; background: var(--neon); width: 100%; }
+        .ui-panel { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
+        #audio-status { position: absolute; top: 15px; right: 15px; font-size: 20px; color: var(--neon); z-index: 30; }
+        #boss-ui { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 400px; display: none; text-align: center; }
+        .hp-bg { width: 100%; height: 10px; background: rgba(255,0,0,0.2); border: 1px solid var(--danger); margin-top: 5px; }
+        #boss-hp-fill { height: 100%; background: var(--danger); width: 100%; transition: 0.1s; }
+        #lives-ui { display: inline-flex; gap: 5px; }
+        .heart { color: var(--danger); font-size: 20px; }
+        #menu-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .upgrade-card { background: rgba(255,255,255,0.03); padding: 12px; border: 1px solid #333; border-radius: 8px; width: 140px; text-align: center; }
+        button { padding: 10px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; color: #000; }
+        .t-bar { width: 120px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div id="audio-status">🔊</div>
+        <div id="boss-ui">
+            <div style="font-size: 12px; color: var(--danger);">DESTRUCTOR GALÁCTICO</div>
+            <div class="hp-bg"><div id="boss-hp-fill"></div></div>
+        </div>
         <div class="ui-panel">
-            <div>CRÉDITOS: <span id="coins-ui" style="color:var(--gold)">0</span> | HP: <span id="lives-ui" style="color:#ff4d4d"></span></div>
+            <div>CREDITOS: <span id="coins-ui" style="color:var(--gold)">0</span> | HP: <div id="lives-ui"></div></div>
             <div style="text-align:right">
-                <div id="score-ui" style="font-size: 20px;">0000</div>
-                <div id="weapon-ui" style="font-size: 10px; color:var(--ammo)">MISIL ESTÁNDAR</div>
+                <div id="score-ui" style="font-size: 24px;">0000</div>
+                <div id="phase-ui" style="font-size: 10px; color:var(--neon)">SECTOR: PROFUNDO</div>
             </div>
         </div>
 
-        <div class="timer-bar" id="double-timer"><div id="double-fill"></div><div style="font-size:9px; text-align:center">DISPARO DOBLE</div></div>
+        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px;">
+            <div id="t-plasma" style="display:none">PLASMA <div class="t-bar"><div id="plasma-fill" style="height:100%; background:var(--plasma)"></div></div></div>
+            <div id="t-shield" style="display:none">ESCUDO <div class="t-bar"><div id="shield-fill" style="height:100%; background:var(--shield)"></div></div></div>
+        </div>
         
         <canvas id="gameCanvas" width="800" height="600"></canvas>
 
         <div id="menu-overlay">
-            <h1 id="menu-title" style="letter-spacing:5px; color:var(--neon)">SPACE WAR</h1>
-            
+            <h1 id="menu-title" style="color:var(--neon);">GALAXY WARS</h1>
             <div id="shop-content" style="display:none">
                 <div class="shop-grid">
-                    <div class="upgrade-card"><div>MOTOR</div><div id="lvl-speed" style="color:var(--neon)">Lvl 0</div><button id="btn-speed" onclick="buyUpgrade('speed')">-</button></div>
-                    <div class="upgrade-card"><div>CADENCIA</div><div id="lvl-fire" style="color:var(--neon)">Lvl 0</div><button id="btn-fire" onclick="buyUpgrade('fire')">-</button></div>
-                    <div class="upgrade-card"><div>ESCUDO</div><div id="lvl-life" style="color:var(--neon)">Lvl 0</div><button id="btn-life" onclick="buyUpgrade('life')">-</button></div>
-                    <div class="upgrade-card"><div>ARMAS</div><div id="lvl-ammo" style="color:var(--ammo)">Lvl 0</div><button id="btn-ammo" onclick="buyUpgrade('ammo')">-</button></div>
+                    <div class="upgrade-card"><div>MOTOR</div><div id="lvl-speed">0/5</div><button id="btn-speed" onclick="buyUpgrade('speed')">-</button></div>
+                    <div class="upgrade-card"><div>ATAQUE</div><div id="lvl-fire">0/5</div><button id="btn-fire" onclick="buyUpgrade('fire')">-</button></div>
+                    <div class="upgrade-card"><div>ESCUDO</div><div id="lvl-life">0/5</div><button id="btn-life" onclick="buyUpgrade('life')">-</button></div>
+                    <div class="upgrade-card"><div>PLASMA</div><div id="lvl-ammo">0/5</div><button id="btn-ammo" onclick="buyUpgrade('ammo')">-</button></div>
                 </div>
             </div>
-
-            <button onclick="initGame()" style="width:250px; font-size:18px" id="main-btn">INICIAR MISIÓN</button>
-            <p style="font-size:11px; color:#555; margin-top:20px;">P: TIENDA | X: NUKE | ESPACIO: DISPARAR</p>
+            <button onclick="handleStartButtonClick()" style="width:250px" id="main-btn">INICIAR MISIÓN</button>
+            <p style="font-size:10px; color:#555; margin-top:15px;">M: MUTE | P: TIENDA | ALIADO CADA 250 PUNTOS</p>
         </div>
     </div>
 
@@ -54,103 +64,38 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    const menuMusic = new Audio('menu-aviones.mp3');
+    const gameMusic = new Audio('aviones.mp3');
+    menuMusic.loop = true; gameMusic.loop = true;
+    let isMuted = false;
+
+    function playMusic(track) {
+        menuMusic.pause(); gameMusic.pause();
+        if(!isMuted) { track.currentTime = 0; track.play().catch(()=>{}); }
+    }
+
     let gameActive = false, isPaused = false, score = 0, coins = 0;
-    let player, bullets = [], enemies = [], stars = [], particles = [], bonuses = [], boss = null;
-    let keys = {}, doubleShotTimer = 0;
-    
+    let player, bullets = [], enemies = [], stars = [], particles = [], nebulas = [], allies = [], dropCoins = [], enemyBullets = [];
+    let boss = null, lastAllyScore = 0;
+    let keys = {}, plasmaTimer = 0, shieldTimer = 0;
     let shopLevels = { fire: 0, speed: 0, life: 0, ammo: 0 };
-    let shopPrices = { fire: 200, speed: 150, life: 250, ammo: 400 };
-    const WEAPONS = ["ESTÁNDAR", "PLASMA", "FOTÓN", "DESTRUCTOR", "ANIKILADOR"];
-
-    function createStars() {
-        stars = Array.from({length: 100}, () => ({ x: Math.random()*800, y: Math.random()*600, v: Math.random()*3 + 1 }));
-    }
-
-    // --- DIBUJO DE SPRITES ---
-    function drawShip(x, y, isPlayer, color) {
-        ctx.save();
-        ctx.translate(x, y);
-        if(!isPlayer) ctx.rotate(Math.PI);
-
-        // Sombras y brillo
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = color;
-
-        // Alas traseras
-        ctx.fillStyle = "#333";
-        ctx.fillRect(-22, 5, 44, 5);
-        
-        // Cuerpo Principal
-        let grad = ctx.createLinearGradient(-15, 0, 15, 0);
-        grad.addColorStop(0, "#555");
-        grad.addColorStop(0.5, color);
-        grad.addColorStop(1, "#555");
-        ctx.fillStyle = grad;
-        
-        ctx.beginPath();
-        ctx.moveTo(0, -28); 
-        ctx.lineTo(-18, 12); ctx.lineTo(-8, 8); 
-        ctx.lineTo(8, 8); ctx.lineTo(18, 12);
-        ctx.closePath(); ctx.fill();
-
-        // Cabina
-        ctx.fillStyle = "rgba(0, 242, 255, 0.7)";
-        ctx.beginPath();
-        ctx.ellipse(0, -5, 5, 10, 0, 0, Math.PI*2);
-        ctx.fill();
-
-        // Motores
-        if(isPlayer && Math.random() > 0.2) {
-            ctx.fillStyle = "#ffaa00";
-            ctx.fillRect(-12, 12, 6, 10 * Math.random() + 5);
-            ctx.fillRect(6, 12, 6, 10 * Math.random() + 5);
-        }
-        ctx.restore();
-    }
-
-    window.onkeydown = e => { keys[e.code] = true; if(e.code === "KeyP" && gameActive) toggleShop(); };
-    window.onkeyup = e => keys[e.code] = false;
+    let shopPrices = { fire: 150, speed: 100, life: 200, ammo: 300 };
 
     function initGame() {
-        score = 0; coins = 0; shopLevels = { fire: 0, speed: 0, life: 0, ammo: 0 };
-        player = { x: 400, y: 500, lives: 3, lastShot: 0, invincible: 0, fireRate: 450, speed: 6 };
-        bullets = []; enemies = []; bonuses = []; particles = []; boss = null;
-        createStars();
+        score = 0; coins = 0; boss = null; lastAllyScore = 0;
+        shopLevels = { fire: 0, speed: 0, life: 0, ammo: 0 };
+        player = { x: 400, y: 500, lives: 3, lastShot: 0, speed: 6, fireRate: 450, invincibilityFrame: 0 };
+        bullets = []; enemies = []; particles = []; allies = []; dropCoins = []; enemyBullets = [];
+        stars = Array.from({length: 100}, () => ({ x: Math.random()*800, y: Math.random()*600, v: Math.random()*3+1 }));
         gameActive = true; isPaused = false;
         document.getElementById("menu-overlay").style.display = "none";
         document.getElementById("shop-content").style.display = "block";
+        playMusic(gameMusic);
         updateUI();
         requestAnimationFrame(loop);
     }
 
-    function toggleShop() {
-        isPaused = !isPaused;
-        document.getElementById("menu-overlay").style.display = isPaused ? "flex" : "none";
-        updateUI();
-        if(!isPaused) requestAnimationFrame(loop);
-    }
-
-    function buyUpgrade(t) {
-        if(coins >= shopPrices[t] && shopLevels[t] < 5) {
-            coins -= shopPrices[t]; shopLevels[t]++;
-            shopPrices[t] = Math.floor(shopPrices[t] * 2.2);
-            if(t === 'fire') player.fireRate -= 70;
-            if(t === 'speed') player.speed += 1.5;
-            if(t === 'life') player.lives++;
-            if(t === 'ammo') score += 50; // Pequeño bono al comprar munición
-            updateUI();
-        }
-    }
-
-    function loop() {
-        if(!gameActive || isPaused) return;
-        ctx.clearRect(0,0,800,600);
-        updateLogic();
-        draw();
-        requestAnimationFrame(loop);
-    }
-
-    function updateLogic() {
+    function update() {
         const now = Date.now();
         if(keys["ArrowLeft"] && player.x > 30) player.x -= player.speed;
         if(keys["ArrowRight"] && player.x < 770) player.x += player.speed;
@@ -159,120 +104,196 @@
 
         // Disparo
         if(keys["Space"] && now - player.lastShot > player.fireRate) {
-            let ammoSize = 5 + (shopLevels.ammo * 2);
-            if(doubleShotTimer > now) {
-                bullets.push({x: player.x - 15, y: player.y, s: ammoSize});
-                bullets.push({x: player.x + 15, y: player.y, s: ammoSize});
-            } else {
-                bullets.push({x: player.x, y: player.y, s: ammoSize});
-            }
+            let isPlasma = plasmaTimer > now;
+            bullets.push({
+                x: player.x, 
+                y: player.y - 20, 
+                v: 12, 
+                size: isPlasma ? 15 : 6, 
+                plasma: isPlasma 
+            });
             player.lastShot = now;
         }
 
-        // Timer de Doble Disparo
-        if(doubleShotTimer > now) {
-            document.getElementById("double-timer").style.display = "block";
-            let pct = (doubleShotTimer - now) / 8000;
-            document.getElementById("double-fill").style.width = (pct * 100) + "%";
-        } else {
-            document.getElementById("double-timer").style.display = "none";
+        // Lógica de Aliado cada 250 puntos
+        if(score >= lastAllyScore + 250 && allies.length === 0) {
+            allies.push({ x: -50, y: 150 + Math.random()*150, v: 3 });
+            lastAllyScore += 250;
         }
 
-        bullets.forEach((b, i) => { 
-            b.y -= 14; 
-            if(b.y < -20) bullets.splice(i, 1); 
+        allies.forEach((al, i) => {
+            al.x += al.v;
+            if(Math.floor(al.x) % 40 === 0) dropCoins.push({x: al.x, y: al.y, type: 'coin'});
+            if(Math.hypot(al.x - player.x, al.y - player.y) < 50) {
+                plasmaTimer = now + 7000; // Munición especial por 7 seg
+                shieldTimer = now + 3000; // Mini escudo
+                createExplosion(al.x, al.y, "#3f0", 20);
+                allies.splice(i, 1);
+            }
+            if(al.x > 850) allies.splice(i, 1);
         });
 
-        // Spawn de Enemigos (Naves)
-        if(Math.random() < 0.03 + (score/15000)) {
-            enemies.push({x: Math.random()*800, y: -50, v: 4 + Math.random()*2, hp: 1 + Math.floor(score/1000)});
+        // Actualizar Balas (IMPORTANTE: b.y -= b.v)
+        bullets.forEach((b, i) => {
+            b.y -= b.v;
+            if(b.y < -50) bullets.splice(i, 1);
+        });
+
+        // Monedas
+        dropCoins.forEach((c, i) => {
+            c.y += 2;
+            if(Math.hypot(c.x - player.x, c.y - player.y) < 30) {
+                coins += 10; updateUI(); dropCoins.splice(i, 1);
+            }
+            if(c.y > 650) dropCoins.splice(i, 1);
+        });
+
+        // Boss
+        if(score > 0 && score % 5000 === 0 && !boss) {
+            boss = { x: 400, y: -100, hp: 1000, maxHp: 1000, dir: 1, lastShot: 0 };
+            document.getElementById("boss-ui").style.display = "block";
+        }
+        if(boss) {
+            if(boss.y < 80) boss.y += 1;
+            else {
+                boss.x += 3 * boss.dir;
+                if(boss.x > 700 || boss.x < 100) boss.dir *= -1;
+                if(now - boss.lastShot > 2000) {
+                    enemyBullets.push({x: boss.x, y: boss.y+50}); boss.lastShot = now;
+                }
+            }
+            document.getElementById("boss-hp-fill").style.width = (boss.hp/boss.maxHp*100) + "%";
         }
 
-        enemies.forEach((en, i) => {
-            en.y += en.v;
-            if(Math.hypot(en.x - player.x, en.y - player.y) < 35 && now > player.invincible) onHit();
-            bullets.forEach((b, bi) => {
-                if(Math.hypot(en.x - b.x, en.y - b.y) < 30) {
-                    createExplosion(en.x, en.y, "#f55", 10);
-                    enemies.splice(i, 1); bullets.splice(bi, 1);
-                    score += 10; coins += 15;
-                    if(Math.random() < 0.08) bonuses.push({x: en.x, y: en.y, type: 'double'});
-                    updateUI();
+        // Colisiones de Balas contra Enemigos/Boss
+        bullets.forEach((b, bi) => {
+            if(boss && Math.hypot(b.x - boss.x, b.y - boss.y) < 70) {
+                boss.hp -= (b.plasma ? 20 : 10);
+                if(!b.plasma) bullets.splice(bi, 1);
+                if(boss.hp <= 0) { score += 1000; coins += 500; boss = null; document.getElementById("boss-ui").style.display = "none"; updateUI(); }
+            }
+            enemies.forEach((en, ei) => {
+                if(Math.hypot(en.x - b.x, en.y - b.y) < 35) {
+                    createExplosion(en.x, en.y, "#f44", 10);
+                    enemies.splice(ei, 1);
+                    if(!b.plasma) bullets.splice(bi, 1);
+                    score += 25; coins += 5; updateUI();
                 }
             });
-            if(en.y > 650) enemies.splice(i,1);
         });
 
-        // Bonos
-        bonuses.forEach((b, i) => {
-            b.y += 3;
-            if(Math.hypot(b.x - player.x, b.y - player.y) < 30) {
-                doubleShotTimer = Date.now() + 8000;
-                bonuses.splice(i, 1);
+        // Enemigos Normales
+        if(Math.random() < 0.02 && !boss) enemies.push({ x: Math.random()*800, y: -50, v: 4 });
+        enemies.forEach((en, i) => {
+            en.y += en.v;
+            if(Math.hypot(en.x - player.x, en.y - player.y) < 40 && now > player.invincibilityFrame) {
+                if(shieldTimer > now) enemies.splice(i, 1);
+                else { onHit(); enemies.splice(i, 1); }
             }
+            if(en.y > 650) enemies.splice(i, 1);
+        });
+
+        enemyBullets.forEach((eb, i) => {
+            eb.y += 7;
+            if(Math.hypot(eb.x - player.x, eb.y - player.y) < 20 && now > player.invincibilityFrame) {
+                if(shieldTimer < now) onHit();
+                enemyBullets.splice(i, 1);
+            }
+            if(eb.y > 650) enemyBullets.splice(i, 1);
         });
 
         stars.forEach(s => { s.y += s.v; if(s.y > 600) s.y = 0; });
-        particles.forEach((p, i) => { p.y += 2; p.life--; if(p.life <= 0) particles.splice(i,1); });
-    }
+        particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life--; if(p.life <= 0) particles.splice(i,1); });
 
-    function onHit() {
-        player.lives--; player.invincible = Date.now() + 2000; updateUI();
-        if(player.lives <= 0) gameOver();
-    }
-
-    function createExplosion(x, y, color, n) {
-        for(let i=0; i<n; i++) particles.push({x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 30, color});
+        // UI Timers
+        document.getElementById("t-plasma").style.display = plasmaTimer > now ? "block" : "none";
+        if(plasmaTimer > now) document.getElementById("plasma-fill").style.width = ((plasmaTimer - now) / 70) + "%";
+        document.getElementById("t-shield").style.display = shieldTimer > now ? "block" : "none";
+        if(shieldTimer > now) document.getElementById("shield-fill").style.width = ((shieldTimer - now) / 30) + "%";
     }
 
     function draw() {
-        // Estrellas
-        ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, s.y, 1.5, 1.5));
-        
-        // Enemigos
-        enemies.forEach(en => drawShip(en.x, en.y, false, "#ff4d4d"));
+        ctx.fillStyle = "#000"; ctx.fillRect(0,0,800,600);
+        ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, s.y, 2, 2));
 
-        // Balas
+        if(boss) {
+            ctx.fillStyle = "#444"; ctx.beginPath(); ctx.arc(boss.x, boss.y, 60, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#f44"; ctx.beginPath(); ctx.arc(boss.x, boss.y, 20, 0, Math.PI*2); ctx.fill();
+        }
+
+        allies.forEach(al => drawShip(al.x, al.y, "#0af", true));
+        dropCoins.forEach(c => {
+            ctx.fillStyle = "#ffcc00"; ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, Math.PI*2); ctx.fill();
+        });
+
+        enemies.forEach(en => drawShip(en.x, en.y, "#f44", false));
+        
         bullets.forEach(b => {
-            ctx.shadowBlur = 10; ctx.shadowColor = "#ff00ff";
-            ctx.fillStyle = "#ff00ff";
-            ctx.beginPath();
-            ctx.ellipse(b.x, b.y, b.s/2.5, b.s*2, 0, 0, Math.PI*2);
-            ctx.fill();
+            ctx.shadowBlur = b.plasma ? 15 : 0; ctx.shadowColor = b.plasma ? "#3f0" : "transparent";
+            ctx.fillStyle = b.plasma ? "#3f0" : "#0ff";
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill();
             ctx.shadowBlur = 0;
         });
 
-        // Bonos
-        bonuses.forEach(b => {
-            ctx.fillStyle = "#00f2ff"; ctx.beginPath(); ctx.arc(b.x, b.y, 15, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "#000"; ctx.fillText("D", b.x-4, b.y+5);
-        });
+        enemyBullets.forEach(eb => { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
+        particles.forEach(p => { ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,2,2); });
 
-        // Jugador
-        if(Date.now() > player.invincible || Math.floor(Date.now()/100)%2==0) {
-            drawShip(player.x, player.y, true, "#00f2ff");
+        const now = Date.now();
+        if(now > player.invincibilityFrame || Math.floor(now/100) % 2 === 0) {
+            drawShip(player.x, player.y, "#00f2ff", true, shieldTimer > now);
         }
+    }
+
+    function drawShip(x, y, color, isUp, hasShield) {
+        ctx.save(); ctx.translate(x, y);
+        if(!isUp) ctx.rotate(Math.PI);
+        if(hasShield) { ctx.beginPath(); ctx.arc(0,0,40,0,Math.PI*2); ctx.strokeStyle="#0f8"; ctx.lineWidth=2; ctx.stroke(); }
+        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(0,-25); ctx.lineTo(-20,15); ctx.lineTo(20,15); ctx.closePath(); ctx.fill();
+        ctx.restore();
+    }
+
+    function onHit() {
+        player.lives--; player.invincibilityFrame = Date.now() + 2000;
+        updateUI(); if(player.lives <= 0) gameOver();
     }
 
     function updateUI() {
         document.getElementById("coins-ui").innerText = coins;
         document.getElementById("score-ui").innerText = score.toString().padStart(4, '0');
-        document.getElementById("lives-ui").innerText = "❤".repeat(Math.max(0, player.lives));
-        document.getElementById("weapon-ui").innerText = "ARCO TIPO: " + WEAPONS[shopLevels.ammo];
-        ['fire', 'speed', 'life', 'ammo'].forEach(t => {
-            document.getElementById("lvl-"+t).innerText = "Lvl " + shopLevels[t];
+        const livesContainer = document.getElementById("lives-ui");
+        livesContainer.innerHTML = '';
+        for(let i=0; i < player.lives; i++) {
+            const span = document.createElement('span'); span.className = 'heart'; span.innerText = '❤';
+            livesContainer.appendChild(span);
+        }
+        ['speed','fire','life','ammo'].forEach(t => {
+            document.getElementById("lvl-"+t).innerText = shopLevels[t]+"/5";
             let btn = document.getElementById("btn-"+t);
-            btn.innerText = shopLevels[t] >= 5 ? "MAX" : shopPrices[t] + " 🪙";
-            btn.disabled = coins < shopPrices[t] || shopLevels[t] >= 5;
+            btn.innerText = shopLevels[t]>=5?"MAX":shopPrices[t]+" 🪙";
+            btn.disabled = coins < shopPrices[t] || shopLevels[t]>=5;
         });
     }
 
-    function gameOver() {
-        gameActive = false;
-        document.getElementById("menu-overlay").style.display = "flex";
-        document.getElementById("menu-title").innerText = "NAVE DESTRUIDA";
-        document.getElementById("main-btn").innerText = "REINTENTAR";
+    function handleStartButtonClick() {
+        if(!gameActive) initGame();
+        else if(isPaused) toggleShop();
     }
+
+    function toggleShop() {
+        isPaused = !isPaused;
+        document.getElementById("menu-overlay").style.display = isPaused ? "flex" : "none";
+        playMusic(isPaused ? menuMusic : gameMusic);
+        if(!isPaused) requestAnimationFrame(loop);
+    }
+
+    function createExplosion(x,y,c,n) { for(let i=0;i<n;i++) particles.push({x,y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:20,color:c}); }
+    function gameOver() { gameActive = false; playMusic(menuMusic); document.getElementById("menu-overlay").style.display = "flex"; document.getElementById("menu-title").innerText = "FIN DEL JUEGO"; }
+    function toggleMute() { isMuted = !isMuted; document.getElementById("audio-status").innerText = isMuted ? "🔇" : "🔊"; menuMusic.pause(); gameMusic.pause(); if(!isMuted) playMusic(gameActive && !isPaused ? gameMusic : menuMusic); }
+
+    window.onkeydown = e => { keys[e.code] = true; if(e.code === "KeyP" && gameActive) toggleShop(); if(e.code === "KeyM") toggleMute(); };
+    window.onkeyup = e => keys[e.code] = false;
+
+    function loop() { if(gameActive && !isPaused) { update(); draw(); requestAnimationFrame(loop); } }
 </script>
 </body>
 </html>
