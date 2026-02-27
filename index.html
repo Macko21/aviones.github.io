@@ -2,57 +2,51 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Space War: Hall of Fame</title>
+    <title>Space War: Advanced Warfare</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        #game-container { position: relative; border: 3px solid #00ff00; box-shadow: 0 0 20px #00ff00; width: 600px; height: 800px; }
-        canvas { background: #020205; display: block; }
-        .ui { position: absolute; top: 10px; left: 15px; width: 94%; display: flex; justify-content: space-between; pointer-events: none; font-size: 16px; z-index: 10; }
-        #menu-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; background: rgba(0,0,0,0.95); padding: 25px; border-radius: 15px; border: 2px solid #00ff00; z-index: 20; min-width: 400px; max-height: 90vh; overflow-y: auto; }
-        
-        /* Estilos del Ranking */
-        .leaderboard { margin: 20px 0; border-top: 1px solid #444; padding-top: 10px; }
-        .leaderboard table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .leaderboard th { color: #00ff00; padding-bottom: 10px; }
-        .leaderboard td { padding: 5px; border-bottom: 1px solid #222; }
-        .gold { color: #ffcc00; font-weight: bold; }
-
-        .shop-item { margin: 10px 0; padding: 8px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        button { padding: 8px 12px; font-size: 13px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; color: black; border-radius: 3px; }
-        button:disabled { background: #444; color: #888; }
-        .nuke-bar { position: absolute; bottom: 20px; left: 20px; width: 120px; height: 8px; border: 1px solid #fff; }
-        #nuke-fill { width: 0%; height: 100%; background: #00ff00; }
+        :root { --neon: #00f2ff; --gold: #ffcc00; --ammo: #ff00ff; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #game-container { position: relative; border: 2px solid #333; box-shadow: 0 0 50px rgba(0, 242, 255, 0.15); background: #02020a; width: 800px; height: 600px; }
+        canvas { display: block; }
+        .ui-panel { position: absolute; top: 15px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; text-shadow: 0 0 10px #000; }
+        #menu-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        .upgrade-card { background: #111; padding: 15px; border: 1px solid #444; border-radius: 8px; width: 160px; text-align: center; }
+        button { padding: 10px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; margin-top: 10px; }
+        button:disabled { background: #333; color: #777; }
+        .timer-bar { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 200px; height: 5px; background: rgba(255,255,255,0.1); display: none; }
+        #double-fill { height: 100%; background: var(--neon); width: 100%; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div class="ui">
-            <div>MONEDAS: <span id="coins-ui">0</span> | VIDAS: <span id="lives-ui">❤❤❤</span></div>
-            <div>PUNTOS: <span id="score-ui">0</span></div>
+        <div class="ui-panel">
+            <div>CRÉDITOS: <span id="coins-ui" style="color:var(--gold)">0</span> | HP: <span id="lives-ui" style="color:#ff4d4d"></span></div>
+            <div style="text-align:right">
+                <div id="score-ui" style="font-size: 20px;">0000</div>
+                <div id="weapon-ui" style="font-size: 10px; color:var(--ammo)">MISIL ESTÁNDAR</div>
+            </div>
         </div>
-        <div class="nuke-bar"><div id="nuke-fill"></div></div>
-        <canvas id="gameCanvas" width="600" height="800"></canvas>
+
+        <div class="timer-bar" id="double-timer"><div id="double-fill"></div><div style="font-size:9px; text-align:center">DISPARO DOBLE</div></div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
 
         <div id="menu-overlay">
-            <h2 id="menu-title">SPACE WAR: TOP PILOTS</h2>
+            <h1 id="menu-title" style="letter-spacing:5px; color:var(--neon)">SPACE WAR</h1>
             
             <div id="shop-content" style="display:none">
-                <p>Monedas: <span id="shop-coins">0</span></p>
-                <div class="shop-item"><span>CADENCIA (Lvl <span id="txt-fire">0</span>)</span><button id="btn-fire" onclick="buyUpgrade('fire')">---</button></div>
-                <div class="shop-item"><span>MOTOR (Lvl <span id="txt-speed">0</span>)</span><button id="btn-speed" onclick="buyUpgrade('speed')">---</button></div>
-                <div class="shop-item"><span>VIDA (Lvl <span id="txt-life">0</span>)</span><button id="btn-life" onclick="buyUpgrade('life')">---</button></div>
+                <div class="shop-grid">
+                    <div class="upgrade-card"><div>MOTOR</div><div id="lvl-speed" style="color:var(--neon)">Lvl 0</div><button id="btn-speed" onclick="buyUpgrade('speed')">-</button></div>
+                    <div class="upgrade-card"><div>CADENCIA</div><div id="lvl-fire" style="color:var(--neon)">Lvl 0</div><button id="btn-fire" onclick="buyUpgrade('fire')">-</button></div>
+                    <div class="upgrade-card"><div>ESCUDO</div><div id="lvl-life" style="color:var(--neon)">Lvl 0</div><button id="btn-life" onclick="buyUpgrade('life')">-</button></div>
+                    <div class="upgrade-card"><div>ARMAS</div><div id="lvl-ammo" style="color:var(--ammo)">Lvl 0</div><button id="btn-ammo" onclick="buyUpgrade('ammo')">-</button></div>
+                </div>
             </div>
 
-            <div class="leaderboard" id="leaderboard-ui">
-                <table>
-                    <thead><tr><th>POS</th><th>PILOTO</th><th>SCORE</th></tr></thead>
-                    <tbody id="leaderboard-body"></tbody>
-                </table>
-            </div>
-
-            <p id="msg-hint">FLECHAS: Mover | ESPACIO: Disparar<br>P: Pausa/Tienda | X: Nuke</p>
-            <button id="start-btn" onclick="initGame()">INICIAR MISIÓN</button>
+            <button onclick="initGame()" style="width:250px; font-size:18px" id="main-btn">INICIAR MISIÓN</button>
+            <p style="font-size:11px; color:#555; margin-top:20px;">P: TIENDA | X: NUKE | ESPACIO: DISPARAR</p>
         </div>
     </div>
 
@@ -60,56 +54,68 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let gameActive = false, isPaused = false, score = 0, coins = 0, shake = 0;
-    let player, bullets, enemies, enemyBombs, stars, particles, coinObjects, boss;
-    let keys = {}, nukeCharge = 0, bossCount = 0;
+    let gameActive = false, isPaused = false, score = 0, coins = 0;
+    let player, bullets = [], enemies = [], stars = [], particles = [], bonuses = [], boss = null;
+    let keys = {}, doubleShotTimer = 0;
+    
+    let shopLevels = { fire: 0, speed: 0, life: 0, ammo: 0 };
+    let shopPrices = { fire: 200, speed: 150, life: 250, ammo: 400 };
+    const WEAPONS = ["ESTÁNDAR", "PLASMA", "FOTÓN", "DESTRUCTOR", "ANIKILADOR"];
 
-    let shopLevels = { fire: 0, speed: 0, life: 0 };
-    let shopPrices = { fire: 100, speed: 50, life: 150 };
-
-    // --- LÓGICA DE RECORDS ---
-    function getLeaderboard() {
-        const raw = localStorage.getItem('spaceWar_top5');
-        return raw ? JSON.parse(raw) : [];
+    function createStars() {
+        stars = Array.from({length: 100}, () => ({ x: Math.random()*800, y: Math.random()*600, v: Math.random()*3 + 1 }));
     }
 
-    function saveScore(name, finalScore) {
-        let board = getLeaderboard();
-        board.push({ name, score: finalScore });
-        board.sort((a, b) => b.score - a.score);
-        board = board.slice(0, 5); // Solo guardamos los mejores 5
-        localStorage.setItem('spaceWar_top5', JSON.stringify(board));
-        displayLeaderboard();
+    // --- DIBUJO DE SPRITES ---
+    function drawShip(x, y, isPlayer, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        if(!isPlayer) ctx.rotate(Math.PI);
+
+        // Sombras y brillo
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = color;
+
+        // Alas traseras
+        ctx.fillStyle = "#333";
+        ctx.fillRect(-22, 5, 44, 5);
+        
+        // Cuerpo Principal
+        let grad = ctx.createLinearGradient(-15, 0, 15, 0);
+        grad.addColorStop(0, "#555");
+        grad.addColorStop(0.5, color);
+        grad.addColorStop(1, "#555");
+        ctx.fillStyle = grad;
+        
+        ctx.beginPath();
+        ctx.moveTo(0, -28); 
+        ctx.lineTo(-18, 12); ctx.lineTo(-8, 8); 
+        ctx.lineTo(8, 8); ctx.lineTo(18, 12);
+        ctx.closePath(); ctx.fill();
+
+        // Cabina
+        ctx.fillStyle = "rgba(0, 242, 255, 0.7)";
+        ctx.beginPath();
+        ctx.ellipse(0, -5, 5, 10, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // Motores
+        if(isPlayer && Math.random() > 0.2) {
+            ctx.fillStyle = "#ffaa00";
+            ctx.fillRect(-12, 12, 6, 10 * Math.random() + 5);
+            ctx.fillRect(6, 12, 6, 10 * Math.random() + 5);
+        }
+        ctx.restore();
     }
 
-    function displayLeaderboard() {
-        const board = getLeaderboard();
-        const body = document.getElementById('leaderboard-body');
-        body.innerHTML = board.map((entry, i) => `
-            <tr class="${i === 0 ? 'gold' : ''}">
-                <td>${i + 1}</td>
-                <td>${entry.name}</td>
-                <td>${entry.score}</td>
-            </tr>
-        `).join('') || '<tr><td colspan="3">Sin registros</td></tr>';
-    }
-
-    // --- LÓGICA DEL JUEGO ---
-    window.onkeydown = e => { 
-        keys[e.code] = true; 
-        if(e.code === "KeyP" && gameActive) toggleShop();
-        if(e.code === "KeyX" && nukeCharge >= 100) triggerNuke();
-        if(e.code === "KeyR" && !gameActive) initGame();
-    };
+    window.onkeydown = e => { keys[e.code] = true; if(e.code === "KeyP" && gameActive) toggleShop(); };
     window.onkeyup = e => keys[e.code] = false;
 
     function initGame() {
-        score = 0; coins = 0; nukeCharge = 0; bossCount = 0;
-        shopLevels = { fire: 0, speed: 0, life: 0 };
-        shopPrices = { fire: 100, speed: 50, life: 150 };
-        player = { x: 300, y: 700, lives: 3, lastShot: 0, invincible: 0, fireRate: 450, speed: 6 };
-        bullets = []; enemies = []; enemyBombs = []; particles = []; coinObjects = []; boss = null;
-        stars = Array.from({length: 80}, () => ({x: Math.random()*canvas.width, y: Math.random()*canvas.height, v: Math.random()*3+2}));
+        score = 0; coins = 0; shopLevels = { fire: 0, speed: 0, life: 0, ammo: 0 };
+        player = { x: 400, y: 500, lives: 3, lastShot: 0, invincible: 0, fireRate: 450, speed: 6 };
+        bullets = []; enemies = []; bonuses = []; particles = []; boss = null;
+        createStars();
         gameActive = true; isPaused = false;
         document.getElementById("menu-overlay").style.display = "none";
         document.getElementById("shop-content").style.display = "block";
@@ -119,178 +125,154 @@
 
     function toggleShop() {
         isPaused = !isPaused;
-        document.getElementById("menu-overlay").style.display = isPaused ? "block" : "none";
-        if(!isPaused) requestAnimationFrame(loop);
+        document.getElementById("menu-overlay").style.display = isPaused ? "flex" : "none";
         updateUI();
+        if(!isPaused) requestAnimationFrame(loop);
     }
 
-    function buyUpgrade(type) {
-        if(coins >= shopPrices[type] && shopLevels[type] < 5) {
-            coins -= shopPrices[type];
-            shopLevels[type]++;
-            shopPrices[type] = Math.floor(shopPrices[type] * 2.2);
-            if(type === 'fire') player.fireRate -= 65;
-            if(type === 'speed') player.speed += 1.5;
-            if(type === 'life') player.lives++;
+    function buyUpgrade(t) {
+        if(coins >= shopPrices[t] && shopLevels[t] < 5) {
+            coins -= shopPrices[t]; shopLevels[t]++;
+            shopPrices[t] = Math.floor(shopPrices[t] * 2.2);
+            if(t === 'fire') player.fireRate -= 70;
+            if(t === 'speed') player.speed += 1.5;
+            if(t === 'life') player.lives++;
+            if(t === 'ammo') score += 50; // Pequeño bono al comprar munición
             updateUI();
         }
     }
 
-    function triggerNuke() {
-        nukeCharge = 0; shake = 40;
-        enemies.forEach(en => createExplosion(en.x, en.y, "#0f0", 20));
-        enemies = []; enemyBombs = [];
-        updateUI();
+    function loop() {
+        if(!gameActive || isPaused) return;
+        ctx.clearRect(0,0,800,600);
+        updateLogic();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    function updateLogic() {
+        const now = Date.now();
+        if(keys["ArrowLeft"] && player.x > 30) player.x -= player.speed;
+        if(keys["ArrowRight"] && player.x < 770) player.x += player.speed;
+        if(keys["ArrowUp"] && player.y > 30) player.y -= player.speed;
+        if(keys["ArrowDown"] && player.y < 570) player.y += player.speed;
+
+        // Disparo
+        if(keys["Space"] && now - player.lastShot > player.fireRate) {
+            let ammoSize = 5 + (shopLevels.ammo * 2);
+            if(doubleShotTimer > now) {
+                bullets.push({x: player.x - 15, y: player.y, s: ammoSize});
+                bullets.push({x: player.x + 15, y: player.y, s: ammoSize});
+            } else {
+                bullets.push({x: player.x, y: player.y, s: ammoSize});
+            }
+            player.lastShot = now;
+        }
+
+        // Timer de Doble Disparo
+        if(doubleShotTimer > now) {
+            document.getElementById("double-timer").style.display = "block";
+            let pct = (doubleShotTimer - now) / 8000;
+            document.getElementById("double-fill").style.width = (pct * 100) + "%";
+        } else {
+            document.getElementById("double-timer").style.display = "none";
+        }
+
+        bullets.forEach((b, i) => { 
+            b.y -= 14; 
+            if(b.y < -20) bullets.splice(i, 1); 
+        });
+
+        // Spawn de Enemigos (Naves)
+        if(Math.random() < 0.03 + (score/15000)) {
+            enemies.push({x: Math.random()*800, y: -50, v: 4 + Math.random()*2, hp: 1 + Math.floor(score/1000)});
+        }
+
+        enemies.forEach((en, i) => {
+            en.y += en.v;
+            if(Math.hypot(en.x - player.x, en.y - player.y) < 35 && now > player.invincible) onHit();
+            bullets.forEach((b, bi) => {
+                if(Math.hypot(en.x - b.x, en.y - b.y) < 30) {
+                    createExplosion(en.x, en.y, "#f55", 10);
+                    enemies.splice(i, 1); bullets.splice(bi, 1);
+                    score += 10; coins += 15;
+                    if(Math.random() < 0.08) bonuses.push({x: en.x, y: en.y, type: 'double'});
+                    updateUI();
+                }
+            });
+            if(en.y > 650) enemies.splice(i,1);
+        });
+
+        // Bonos
+        bonuses.forEach((b, i) => {
+            b.y += 3;
+            if(Math.hypot(b.x - player.x, b.y - player.y) < 30) {
+                doubleShotTimer = Date.now() + 8000;
+                bonuses.splice(i, 1);
+            }
+        });
+
+        stars.forEach(s => { s.y += s.v; if(s.y > 600) s.y = 0; });
+        particles.forEach((p, i) => { p.y += 2; p.life--; if(p.life <= 0) particles.splice(i,1); });
+    }
+
+    function onHit() {
+        player.lives--; player.invincible = Date.now() + 2000; updateUI();
+        if(player.lives <= 0) gameOver();
+    }
+
+    function createExplosion(x, y, color, n) {
+        for(let i=0; i<n; i++) particles.push({x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 30, color});
+    }
+
+    function draw() {
+        // Estrellas
+        ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, s.y, 1.5, 1.5));
+        
+        // Enemigos
+        enemies.forEach(en => drawShip(en.x, en.y, false, "#ff4d4d"));
+
+        // Balas
+        bullets.forEach(b => {
+            ctx.shadowBlur = 10; ctx.shadowColor = "#ff00ff";
+            ctx.fillStyle = "#ff00ff";
+            ctx.beginPath();
+            ctx.ellipse(b.x, b.y, b.s/2.5, b.s*2, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+
+        // Bonos
+        bonuses.forEach(b => {
+            ctx.fillStyle = "#00f2ff"; ctx.beginPath(); ctx.arc(b.x, b.y, 15, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#000"; ctx.fillText("D", b.x-4, b.y+5);
+        });
+
+        // Jugador
+        if(Date.now() > player.invincible || Math.floor(Date.now()/100)%2==0) {
+            drawShip(player.x, player.y, true, "#00f2ff");
+        }
     }
 
     function updateUI() {
         document.getElementById("coins-ui").innerText = coins;
-        document.getElementById("shop-coins").innerText = coins;
-        document.getElementById("score-ui").innerText = score;
+        document.getElementById("score-ui").innerText = score.toString().padStart(4, '0');
         document.getElementById("lives-ui").innerText = "❤".repeat(Math.max(0, player.lives));
-        document.getElementById("nuke-fill").style.width = nukeCharge + "%";
-        ['fire', 'speed', 'life'].forEach(t => {
-            document.getElementById("txt-"+t).innerText = shopLevels[t];
+        document.getElementById("weapon-ui").innerText = "ARCO TIPO: " + WEAPONS[shopLevels.ammo];
+        ['fire', 'speed', 'life', 'ammo'].forEach(t => {
+            document.getElementById("lvl-"+t).innerText = "Lvl " + shopLevels[t];
             let btn = document.getElementById("btn-"+t);
             btn.innerText = shopLevels[t] >= 5 ? "MAX" : shopPrices[t] + " 🪙";
             btn.disabled = coins < shopPrices[t] || shopLevels[t] >= 5;
         });
     }
 
-    function createExplosion(x, y, color, count=10) {
-        for(let i=0; i<count; i++) {
-            particles.push({x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 30, color});
-        }
-    }
-
-    function loop() {
-        if(!gameActive || isPaused) return;
-        ctx.save();
-        if(shake > 0) { ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake); shake *= 0.9; }
-        updateLogic();
-        draw();
-        ctx.restore();
-        requestAnimationFrame(loop);
-    }
-
-    function updateLogic() {
-        const now = Date.now();
-        if(keys["ArrowLeft"] && player.x > 20) player.x -= player.speed;
-        if(keys["ArrowRight"] && player.x < canvas.width - 20) player.x += player.speed;
-        if(keys["ArrowUp"] && player.y > 20) player.y -= player.speed;
-        if(keys["ArrowDown"] && player.y < canvas.height - 20) player.y += player.speed;
-
-        if(keys["Space"] && now - player.lastShot > player.fireRate) {
-            bullets.push({x: player.x, y: player.y - 20});
-            player.lastShot = now;
-        }
-
-        bullets.forEach((b, i) => {
-            b.y -= 12;
-            if(b.y < -20) bullets.splice(i, 1);
-        });
-
-        if(score > 0 && score % 500 === 0 && !boss) {
-            bossCount++;
-            boss = { x: 300, y: -100, hp: 100 * bossCount, maxHp: 100 * bossCount, timer: 0, dir: 1 };
-        }
-
-        if(boss) {
-            if(boss.y < 120) boss.y += 2;
-            boss.x += 3 * boss.dir; if(boss.x > 500 || boss.x < 100) boss.dir *= -1;
-            boss.timer++;
-            if(boss.timer % 60 === 0) enemyBombs.push({x: boss.x, y: boss.y + 40});
-            bullets.forEach((b, bi) => {
-                if(Math.hypot(b.x - boss.x, b.y - boss.y) < 60) {
-                    boss.hp--; bullets.splice(bi, 1);
-                    if(boss.hp <= 0) { boss = null; score += 200; coins += 150; updateUI(); }
-                }
-            });
-        }
-
-        if(!boss && Math.random() < 0.03 + (score/10000)) {
-            enemies.push({x: Math.random()*canvas.width, y: -40, speed: 3 + (score/2000)});
-        }
-
-        enemies.forEach((en, ei) => {
-            en.y += en.speed;
-            if(Math.hypot(en.x - player.x, en.y - player.y) < 30 && now > player.invincible) onHit();
-            bullets.forEach((b, bi) => {
-                if(Math.hypot(en.x - b.x, en.y - b.y) < 30) {
-                    createExplosion(en.x, en.y, "#ff0055");
-                    enemies.splice(ei, 1); bullets.splice(bi, 1);
-                    score += 10; nukeCharge = Math.min(100, nukeCharge + 5);
-                    if(Math.random() < 0.4) coinObjects.push({x: en.x, y: en.y});
-                    updateUI();
-                }
-            });
-            if(en.y > 850) enemies.splice(ei, 1);
-        });
-
-        enemyBombs.forEach((bomb, i) => {
-            bomb.y += 6;
-            if(Math.hypot(bomb.x - player.x, bomb.y - player.y) < 25 && now > player.invincible) {
-                onHit(); enemyBombs.splice(i, 1);
-            }
-            if(bomb.y > 850) enemyBombs.splice(i, 1);
-        });
-
-        coinObjects.forEach((c, i) => {
-            c.y += 3;
-            if(Math.hypot(c.x - player.x, c.y - player.y) < 35) { coins += 15; coinObjects.splice(i, 1); updateUI(); }
-        });
-
-        stars.forEach(s => { s.y += s.v; if(s.y > 800) s.y = 0; });
-        particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life--; if(p.life <= 0) particles.splice(i, 1); });
-    }
-
-    function onHit() {
-        player.lives--; player.invincible = Date.now() + 2000; shake = 25;
-        updateUI(); if(player.lives <= 0) gameOver();
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, 600, 800);
-        ctx.fillStyle = "#fff"; stars.forEach(s => ctx.fillRect(s.x, s.y, 2, 2));
-
-        if(boss) {
-            ctx.fillStyle = "#ff0055"; ctx.beginPath(); ctx.arc(boss.x, boss.y, 60, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "#fff"; ctx.fillRect(boss.x-40, boss.y-80, 80, 5);
-            ctx.fillStyle = "#0f0"; ctx.fillRect(boss.x-40, boss.y-80, (boss.hp/boss.maxHp)*80, 5);
-        }
-
-        ctx.fillStyle = "#ffcc00"; coinObjects.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, 10, 0, Math.PI*2); ctx.fill(); });
-        ctx.fillStyle = "#ff0055"; enemies.forEach(en => ctx.fillRect(en.x-15, en.y-15, 30, 30));
-        ctx.fillStyle = "#fff"; enemyBombs.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, Math.PI*2); ctx.fill(); });
-        ctx.fillStyle = "#00ff00"; bullets.forEach(b => ctx.fillRect(b.x-2, b.y, 4, 18));
-        particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3); });
-
-        if (Date.now() > player.invincible || Math.floor(Date.now()/100)%2==0) {
-            ctx.fillStyle = "#00ff00"; ctx.beginPath();
-            ctx.moveTo(player.x, player.y-25); ctx.lineTo(player.x-22, player.y+18); ctx.lineTo(player.x+22, player.y+18); ctx.fill();
-        }
-    }
-
     function gameOver() {
         gameActive = false;
-        const currentBoard = getLeaderboard();
-        
-        // Verificar si entra en el Top 5
-        const isTop = currentBoard.length < 5 || score > currentBoard[currentBoard.length - 1].score;
-        
-        if (isTop && score > 0) {
-            const name = prompt(`¡NUEVO RECORD! ${score} puntos. Ingresa tu nombre:`, "PILOTO");
-            saveScore(name || "ANÓNIMO", score);
-        }
-
-        document.getElementById("menu-overlay").style.display = "block";
-        document.getElementById("menu-title").innerText = "MISIÓN FALLIDA";
-        document.getElementById("start-btn").innerText = "REINTENTAR";
-        displayLeaderboard();
+        document.getElementById("menu-overlay").style.display = "flex";
+        document.getElementById("menu-title").innerText = "NAVE DESTRUIDA";
+        document.getElementById("main-btn").innerText = "REINTENTAR";
     }
-
-    // Inicializar ranking al cargar
-    displayLeaderboard();
 </script>
 </body>
 </html>
